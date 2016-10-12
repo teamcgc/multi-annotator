@@ -1,0 +1,109 @@
+## Multi-annotator {.tabset}
+
+```{r include = FALSE}
+require(tidyverse); require(rmarkdown); require(knitr); require(sevenbridges); 
+
+options(max.print = "99"); opts_knit$set(width = 99)
+opts_chunk$set(cache=FALSE, tidy=FALSE)
+
+source("../../cgc_auth.R")
+
+```
+
+Portable variant annotation tool developed at NCI.
+
+### base command
+
+```{sh base command, eval=FALSE}
+
+cat sample_A_1_variants.txt sample_A_2_variants.txt > sample_A_merged_variants.txt
+
+```
+
+### i/o {.tabset}
+
+#### inputs 
+
+```{r inputs}
+
+inputs = list(
+  
+input(id = "vcf", label = "vcf", description = "vcf", type = "File", cmdInclude=TRUE),
+  
+input(id = "reference_fasta", label = "reference_fasta", description = "reference_fasta", type = "File", cmdInclude=TRUE),
+  
+input(id = "conf_toml", label = "conf_toml", description = "conf_toml", type = "File", cmdInclude=TRUE)
+
+)
+
+```
+
+#### add on scripts {.tabset}
+
+```{sh, eval=FALSE, code=readLines("multi-annotator.sh"), engine='highlight', engine.opts='-S sh'}
+
+```
+
+```{r add on scripts}
+
+multi_annotator_sh = fileDef(name = "multi-annotator.sh", content =
+    
+Expression(engine = "#cwl-js-engine", 
+script = read_file("multi-annotator.sh")))
+
+
+```
+
+#### outputs
+
+```{r output}
+
+outputs = list(
+
+output(id = "annotation_output_vcf", label = "annotation_output_vcf", 
+description = "annotation_output_vcf", type = "File",
+inheritMetadataFrom = "#vcf", metadata = list(from_tool = "annotation_output_vcf"),
+glob = Expression(engine = "#cwl-js-engine", 
+script = '"*.vcf"'))
+)
+
+```
+
+### portability {.tabset}
+
+####docker
+
+``` teamcgc/multi-annotator:latest ```
+
+https://hub.docker.com/r/teamcgc/multi-annotator/
+
+####tool definition
+
+```{r 5 create tool object}
+
+tool <- Tool(
+id = "VCF multi-annotator", 
+label = "VCF multi-annotator",
+hints = requirements(docker(pull = "teamcgc/multi-annotator:latest"), cpu(1), mem(1000)),
+requirements = requirements(multi_annotator_sh),
+
+baseCommand = "bash multi-annotator.sh",
+
+inputs = inputs,
+  
+outputs = outputs)
+
+```
+
+####cwl file
+
+```{r eval=create_cwl=="yes"}
+write(tool$toJSON(pretty = TRUE), "../apps/multi-annotator.json")
+```
+
+####push app to cloud platform
+
+```{r eval=platform_push=="yes"}
+project$app_add("multi-annotator", tool)
+```
+

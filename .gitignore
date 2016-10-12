@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+cgc_auth.R
+cwl/*/*html

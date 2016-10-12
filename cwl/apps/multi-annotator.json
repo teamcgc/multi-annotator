@@ -1,0 +1,104 @@
+{
+  "sbg:id": "VCF multi-annotator",
+  "id": "#VCF_multi-annotator",
+  "inputs": [
+    {
+      "type": ["null", "File"],
+      "label": "vcf",
+      "description": "vcf",
+      "streamable": false,
+      "default": "",
+      "id": "#vcf",
+      "inputBinding": {
+        "position": 0,
+        "separate": true,
+        "sbg:cmdInclude": true
+      },
+      "required": false
+    },
+    {
+      "type": ["null", "File"],
+      "label": "reference_fasta",
+      "description": "reference_fasta",
+      "streamable": false,
+      "default": "",
+      "id": "#reference_fasta",
+      "inputBinding": {
+        "position": 0,
+        "separate": true,
+        "sbg:cmdInclude": true
+      },
+      "required": false
+    },
+    {
+      "type": ["null", "File"],
+      "label": "conf_toml",
+      "description": "conf_toml",
+      "streamable": false,
+      "default": "",
+      "id": "#conf_toml",
+      "inputBinding": {
+        "position": 0,
+        "separate": true,
+        "sbg:cmdInclude": true
+      },
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "type": ["null", "File"],
+      "label": "annotation_output_vcf",
+      "description": "annotation_output_vcf",
+      "streamable": false,
+      "default": "",
+      "id": "#annotation_output_vcf",
+      "outputBinding": {
+        "glob": {
+          "engine": "#cwl-js-engine",
+          "script": "\"*.vcf\"",
+          "class": "Expression"
+        },
+        "sbg:inheritMetadataFrom": "#vcf",
+        "sbg:metadata": {
+          "from_tool": "annotation_output_vcf"
+        }
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "class": "CreateFileRequirement",
+      "fileDef": [
+        {
+          "filename": "multi-annotator.sh",
+          "fileContent": {
+            "engine": "#cwl-js-engine",
+            "script": "\"#!/bin/bash \\n\\\nPATH=$PATH:/opt/vt \\n\\\nvt decompose -s \" + $job.inputs.vcf.path + \" | vt normalize -r \" + $job.inputs.reference_fasta.path + \" > input_VTnorma.vcf \\n\\\nvt sort input_VTnorma.vcf -o input_VTnorma_Sorted.vcf \\n\\\njava -Xmx4g -jar /opt/snpEff/snpEff.jar GRCh37.75 input_VTnorma_Sorted.vcf > input_VTnorma_Sorted_SnpEff.vcf \\n\\\n# /opt/vcfanno/vcfanno -lua example/custom.lua \" + $job.inputs.conf_toml.path + \" input_VTnorma_Sorted_SnpEff.vcf > input_VTnorma_Sorted_SnpEff_vcfAnnoOUT.vcf\"\n",
+            "class": "Expression"
+          }
+        }
+      ]
+    }
+  ],
+  "hints": [
+    {
+      "class": "DockerRequirement",
+      "dockerPull": "teamcgc/multi-annotator:latest"
+    },
+    {
+      "class": "sbg:CPURequirement",
+      "value": 1
+    },
+    {
+      "class": "sbg:MemRequirement",
+      "value": 1000
+    }
+  ],
+  "label": "VCF multi-annotator",
+  "class": "CommandLineTool",
+  "baseCommand": [
+    "bash multi-annotator.sh"
+  ],
+  "arguments": []
+}
