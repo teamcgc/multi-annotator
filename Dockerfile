@@ -28,5 +28,7 @@ RUN wget http://sourceforge.net/projects/snpeff/files/snpEff_latest_core.zip
 RUN unzip snpEff_latest_core.zip
 
 #install vcfanno
-RUN wget https://github.com/brentp/vcfanno/releases/download/v0.1.0/vcfanno_0.1.0_darwin_amd64.zip
-RUN unzip vcfanno_0.1.0_darwin_amd64.zip
+RUN wget https://github.com/brentp/vcfanno/releases/download/v0.1.0/vcfanno_linux64
+
+RUN chmod a+x vcfanno_linux64
+
