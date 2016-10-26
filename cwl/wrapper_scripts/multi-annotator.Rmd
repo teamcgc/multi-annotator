@@ -16,7 +16,7 @@ Portable variant annotation tool developed at NCI.
 
 ```{sh base command, eval=FALSE}
 
-cat sample_A_1_variants.txt sample_A_2_variants.txt > sample_A_merged_variants.txt
+bash multi-annotator.sh
 
 ```
 
@@ -30,9 +30,13 @@ inputs = list(
   
 input(id = "vcf", label = "vcf", description = "vcf", type = "File", cmdInclude=TRUE),
   
-input(id = "reference_fasta", label = "reference_fasta", description = "reference_fasta", type = "File", cmdInclude=TRUE),
+input(id = "annotation_databases", label = "annotation_databases", description = "annotation_databases", type = "File...", cmdInclude=TRUE, stageInput="link", secondaryFiles = list(".tbi")),
   
-input(id = "conf_toml", label = "conf_toml", description = "conf_toml", type = "File", cmdInclude=TRUE)
+input(id = "reference_fasta", label = "reference_fasta", description = "reference_fasta", type = "File", cmdInclude=TRUE, secondaryFiles = list(".fai")),
+  
+input(id = "conf_toml", label = "conf_toml", description = "conf_toml", type = "File", cmdInclude=TRUE),
+  
+input(id = "custom_lua", label = "custom_lua", description = "custom lua for vcfanno", type = "File", cmdInclude=TRUE)
 
 )
 
@@ -62,10 +66,28 @@ outputs = list(
 
 output(id = "annotation_output_vcf", label = "annotation_output_vcf", 
 description = "annotation_output_vcf", type = "File",
-inheritMetadataFrom = "#vcf", metadata = list(from_tool = "annotation_output_vcf"),
+inheritMetadataFrom = "#vcf", metadata = list(from_tool = "vcf_multi_annotator"),
 glob = Expression(engine = "#cwl-js-engine", 
-script = '"*.vcf"'))
+script = '"*annotated.vcf"')),
+  
+output(id = "annotation_output_vcf", label = "annotation_output_vcf", 
+description = "annotation_output_vcf", type = "File",
+inheritMetadataFrom = "#vcf", metadata = list(from_tool = "vcf_multi_annotator"),
+glob = Expression(engine = "#cwl-js-engine", 
+script = '"*annotated.vcf"')),
+
+output(id = "snpEff_summary", label = "snpEff_summary", 
+description = "snpEff_summary", type = "File",
+inheritMetadataFrom = "#vcf", metadata = list(from_tool = "vcf_multi_annotator"),
+glob = 'snpEff_summary.html'),
+  
+output(id = "snpEff_genes", label = "snpEff_genes", 
+description = "snpEff_genes", type = "File",
+inheritMetadataFrom = "#vcf", metadata = list(from_tool = "vcf_multi_annotator"),
+glob = 'snpEff_genes.txt')
+
 )
+
 
 ```
 

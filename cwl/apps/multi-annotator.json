@@ -17,6 +17,30 @@
       "required": false
     },
     {
+      "type": [
+        "null",
+        {
+          "items": "File",
+          "type": "array"
+        }
+      ],
+      "label": "annotation_databases",
+      "description": "annotation_databases",
+      "streamable": false,
+      "default": "",
+      "id": "#annotation_databases",
+      "inputBinding": {
+        "secondaryFiles": [
+          ".tbi"
+        ],
+        "position": 0,
+        "separate": true,
+        "sbg:cmdInclude": true
+      },
+      "sbg:stageInput": "link",
+      "required": false
+    },
+    {
       "type": ["null", "File"],
       "label": "reference_fasta",
       "description": "reference_fasta",
@@ -24,6 +48,9 @@
       "default": "",
       "id": "#reference_fasta",
       "inputBinding": {
+        "secondaryFiles": [
+          ".fai"
+        ],
         "position": 0,
         "separate": true,
         "sbg:cmdInclude": true
@@ -43,6 +70,20 @@
         "sbg:cmdInclude": true
       },
       "required": false
+    },
+    {
+      "type": ["null", "File"],
+      "label": "custom_lua",
+      "description": "custom lua for vcfanno",
+      "streamable": false,
+      "default": "",
+      "id": "#custom_lua",
+      "inputBinding": {
+        "position": 0,
+        "separate": true,
+        "sbg:cmdInclude": true
+      },
+      "required": false
     }
   ],
   "outputs": [
@@ -56,12 +97,42 @@
       "outputBinding": {
         "glob": {
           "engine": "#cwl-js-engine",
-          "script": "\"*.vcf\"",
+          "script": "\"*annotated.vcf\"",
           "class": "Expression"
         },
         "sbg:inheritMetadataFrom": "#vcf",
         "sbg:metadata": {
-          "from_tool": "annotation_output_vcf"
+          "from_tool": "vcf_multi_annotator"
+        }
+      }
+    },
+    {
+      "type": ["null", "File"],
+      "label": "snpEff_summary",
+      "description": "snpEff_summary",
+      "streamable": false,
+      "default": "",
+      "id": "#snpEff_summary",
+      "outputBinding": {
+        "glob": "snpEff_summary.html",
+        "sbg:inheritMetadataFrom": "#vcf",
+        "sbg:metadata": {
+          "from_tool": "vcf_multi_annotator"
+        }
+      }
+    },
+    {
+      "type": ["null", "File"],
+      "label": "snpEff_genes",
+      "description": "snpEff_genes",
+      "streamable": false,
+      "default": "",
+      "id": "#snpEff_genes",
+      "outputBinding": {
+        "glob": "snpEff_genes.txt",
+        "sbg:inheritMetadataFrom": "#vcf",
+        "sbg:metadata": {
+          "from_tool": "vcf_multi_annotator"
         }
       }
     }
@@ -74,7 +145,7 @@
           "filename": "multi-annotator.sh",
           "fileContent": {
             "engine": "#cwl-js-engine",
-            "script": "\"#!/bin/bash \\n\\\nPATH=$PATH:/opt/vt \\n\\\nvt decompose -s \" + $job.inputs.vcf.path + \" | vt normalize -r \" + $job.inputs.reference_fasta.path + \" > input_VTnorma.vcf \\n\\\nvt sort input_VTnorma.vcf -o input_VTnorma_Sorted.vcf \\n\\\njava -Xmx4g -jar /opt/snpEff/snpEff.jar GRCh37.75 input_VTnorma_Sorted.vcf > input_VTnorma_Sorted_SnpEff.vcf \\n\\\n# /opt/vcfanno/vcfanno -lua example/custom.lua \" + $job.inputs.conf_toml.path + \" input_VTnorma_Sorted_SnpEff.vcf > input_VTnorma_Sorted_SnpEff_vcfAnnoOUT.vcf\"\n",
+            "script": "{\nif($job.inputs.custom_lua!=null){lua = $job.inputs.custom_lua.path + \" \"}else{lua=\"\"}\n\nscript = \"#!/bin/bash \\n\\\nPATH=$PATH:/opt/vt \\n\\\nvt decompose -s -o decomposed.vcf \" + $job.inputs.vcf.path + \"\\n\\\nvt normalize -o normalized.vcf -r \" + $job.inputs.reference_fasta.path + \" decomposed.vcf \\n\\\nvt sort -o sorted.vcf normalized.vcf \\n\\\njava -Xmx4g -jar /opt/snpEff/snpEff.jar GRCh37.75 sorted.vcf > snp_eff.vcf \\n\\\n/opt/vcfanno_linux64 \" + lua + $job.inputs.conf_toml.path + \" snp_eff.vcf > \" + $job.inputs.vcf.metadata.sample_id + \"_annotated.vcf\"\n\nreturn script\n}\n",
             "class": "Expression"
           }
         }

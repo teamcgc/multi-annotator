@@ -1,6 +1,13 @@
-"#!/bin/bash \n\
+{
+if($job.inputs.custom_lua!=null){lua = $job.inputs.custom_lua.path + " "}else{lua=""}
+
+script = "#!/bin/bash \n\
 PATH=$PATH:/opt/vt \n\
-vt decompose -s " + $job.inputs.vcf.path + " | vt normalize -r " + $job.inputs.reference_fasta.path + " > input_VTnorma.vcf \n\
-vt sort input_VTnorma.vcf -o input_VTnorma_Sorted.vcf \n\
-java -Xmx4g -jar /opt/snpEff/snpEff.jar GRCh37.75 input_VTnorma_Sorted.vcf > input_VTnorma_Sorted_SnpEff.vcf \n\
-# /opt/vcfanno/vcfanno -lua example/custom.lua " + $job.inputs.conf_toml.path + " input_VTnorma_Sorted_SnpEff.vcf > input_VTnorma_Sorted_SnpEff_vcfAnnoOUT.vcf"
+vt decompose -s -o decomposed.vcf " + $job.inputs.vcf.path + "\n\
+vt normalize -o normalized.vcf -r " + $job.inputs.reference_fasta.path + " decomposed.vcf \n\
+vt sort -o sorted.vcf normalized.vcf \n\
+java -Xmx4g -jar /opt/snpEff/snpEff.jar GRCh37.75 sorted.vcf > snp_eff.vcf \n\
+/opt/vcfanno_linux64 " + lua + $job.inputs.conf_toml.path + " snp_eff.vcf > " + $job.inputs.vcf.metadata.sample_id + "_annotated.vcf"
+
+return script
+}

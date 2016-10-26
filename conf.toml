@@ -1,0 +1,23 @@
+[[annotation]]
+file="ExAC.r0.3.sites.vep.tidy.vcf.gz"
+# the special name 'ID' pulls out the rs id from the VCF
+fields = ['AC_AFR', 'AC_AMR', 'AC_EAS', 'ID']
+ops=["first", "first", "first", "first"]
+
+[[annotation]]
+file="cosmic-v68-GRCh37.tidy.vcf.gz"
+fields=['ID']
+names=['cosmic_ids']
+ops=["uniq"]
+
+[[annotation]]
+file="dbsnp.b147.20160601.tidy.vcf.gz"
+fields=['ID']
+names=['rs_ids']
+ops=["concat"]
+
+[[annotation]]
+file="clinvar_20160203.tidy.vcf.gz"
+fields=['CLNSIG']
+names=['clinvar_pathogenic']
+ops=["self"]
