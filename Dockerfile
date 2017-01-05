@@ -43,3 +43,20 @@ RUN ln -s vcfanno_linux64 vcfanno
 ENV PATH "$PATH:/opt"
 RUN echo "[vcfanno]" >> /opt/versions
 RUN vcfanno 2>&1 | grep "version" >> /opt/versions
+
+#install oncotator
+RUN apt-get install -y python-pip python-numpy python-dev
+RUN wget https://github.com/broadinstitute/oncotator/archive/v1.9.2.0.tar.gz
+RUN tar -xvzf v1.9.2.0.tar.gz
+RUN pip install -e oncotator-1.9.2.0
+RUN echo "[oncotator]" >> /opt/versions
+RUN Oncotator -V >> /opt/versions
+
+#install VEP
+#RUN apt-get install -y cpanminus libdbd-mysql-perl curl
+#RUN cpanm PerlIO::gzip
+#RUN cpanm Bio::DB::BigFile
+#RUN cpanm Archive::Zip
+#RUN git clone https://github.com/Ensembl/ensembl-vep.git
+#RUN cd ensembl-vep
+#RUN perl INSTALL.pl -a l
