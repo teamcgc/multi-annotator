@@ -1,4 +1,3 @@
-
 FROM ubuntu:14.04
 
 MAINTAINER Durga Addepalli <durgaddepalli@gmail.com>
@@ -53,10 +52,14 @@ RUN echo "[oncotator]" >> /opt/versions
 RUN Oncotator -V >> /opt/versions
 
 #install VEP
-#RUN apt-get install -y cpanminus libdbd-mysql-perl curl
-#RUN cpanm PerlIO::gzip
-#RUN cpanm Bio::DB::BigFile
-#RUN cpanm Archive::Zip
-#RUN git clone https://github.com/Ensembl/ensembl-vep.git
-#RUN cd ensembl-vep
-#RUN perl INSTALL.pl -a l
+RUN apt-get install -y cpanminus libdbd-mysql-perl curl
+RUN cpanm PerlIO::gzip
+RUN cpanm Archive::Zip
+RUN cpanm Bio::Root::Version
+RUN git clone https://github.com/Ensembl/ensembl-vep.git
+WORKDIR ensembl-vep
+RUN perl ./INSTALL.pl
+WORKDIR /opt
+RUN echo "[oncotator]" >> /opt/versions
+RUN perl ensembl-vep/vep.pl | grep "  ensembl" >> /opt/versions
+
